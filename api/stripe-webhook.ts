@@ -29,7 +29,10 @@ export function verifyStripeSignature(rawBody: string, header: string | null, se
 
 export async function POST(request: Request): Promise<Response> {
   const raw = await request.text();
-  if (!verifyStripeSignature(raw, request.headers.get("stripe-signature"), process.env.STRIPE_WEBHOOK_SECRET ?? "")) {
+  const sig = request.headers.get("stripe-signature");
+  // STRIPE_WEBHOOK_SECRET_TEST is optional: set it only while testing with the Stripe sandbox, then delete it.
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_WEBHOOK_SECRET_TEST].filter((s): s is string => !!s);
+  if (!secrets.some((s) => verifyStripeSignature(raw, sig, s))) {
     return new Response("Invalid signature", { status: 400 });
   }
 
