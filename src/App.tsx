@@ -10,7 +10,7 @@ import { Topics } from "./screens/Topics";
 import { TopicDetail } from "./screens/TopicDetail";
 import { Progress } from "./screens/Progress";
 import { Settings } from "./screens/Settings";
-import { Unlock } from "./screens/Unlock";
+import { PaymentReturn, Unlock } from "./screens/Unlock";
 
 export default function App() {
   const { loading, error, account, data, access } = useStore();
@@ -49,6 +49,9 @@ export default function App() {
       );
     return <SetupExams />;
   }
+
+  // back from Stripe checkout: wait for the payment to be confirmed
+  if (page === "paid") return <PaymentReturn />;
 
   // trial over and not paid: only Unlock and Settings are available
   if (access?.kind === "expired" && page !== "settings") return <Unlock locked />;

@@ -120,11 +120,12 @@ export function demoUnlock(a: Account, data: AppData): Account {
   return next;
 }
 
+/** Stripe Payment Link with the student's account id attached, so the webhook knows who paid. */
 export function checkoutLink(a: Account): string | null {
   if (!CHECKOUT_URL) return null;
   const u = new window.URL(CHECKOUT_URL);
-  u.searchParams.set("checkout[custom][user_id]", a.userId);
-  if (a.email) u.searchParams.set("checkout[email]", a.email);
+  u.searchParams.set("client_reference_id", a.userId);
+  if (a.email) u.searchParams.set("prefilled_email", a.email);
   return u.toString();
 }
 

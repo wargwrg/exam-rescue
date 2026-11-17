@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "../lib/store";
 import { DEMO_MODE, PRICE_LABEL, checkoutLink, demoUnlock, redeemCode } from "../lib/backend";
 import { go } from "../lib/router";
@@ -27,7 +27,7 @@ export function Unlock({ locked = false }: { locked?: boolean }) {
     } else if (DEMO_MODE) {
       setAccount(demoUnlock(account, data));
       go("today");
-    } else setMsg("Checkout isn't set up yet. Add VITE_CHECKOUT_URL (see README).");
+    } else setMsg("Payments aren't switched on yet. Please check back soon.");
   };
 
   const redeem = async () => {
@@ -130,6 +130,55 @@ export function Unlock({ locked = false }: { locked?: boolean }) {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Shown when Stripe sends the student back after paying. Polls until the webhook has unlocked the account. */
+export function PaymentReturn() {
+  const { access, refresh } = useStore();
+  const [tries, setTries] = useState(0);
+  useEffect(() => {
+    if (access?.kind === "paid") {
+      const t = setTimeout(() => go("today"), 1500);
+      return () => clearTimeout(t);
+    }
+    if (tries >= 20) return;
+    const t = setTimeout(() => {
+      refresh().finally(() => setTries((n) => n + 1));
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [access, tries, refresh]);
+
+  const paid = access?.kind === "paid";
+  return (
+    <div className="min-h-screen bg-[#14213D] text-white flex items-center justify-center p-6">
+      <div className="max-w-sm text-center flex flex-col gap-3 items-center" role="status">
+        <Logo size={18} />
+        {paid ? (
+          <>
+            <span className="text-[#4ADE80] mt-4">{Icon.check(44)}</span>
+            <h1 className="text-2xl font-extrabold m-0">You're unlocked!</h1>
+            <p className="text-[#CBD5E1] m-0">Thanks for your purchase. Taking you to your plan…</p>
+          </>
+        ) : tries < 20 ? (
+          <>
+            <div className="mt-4 w-10 h-10 rounded-full border-4 border-[#2563EB] border-t-transparent animate-spin" aria-hidden="true" />
+            <h1 className="text-2xl font-extrabold m-0">Confirming your payment…</h1>
+            <p className="text-[#CBD5E1] m-0">This usually takes a few seconds.</p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-extrabold m-0 mt-4">Still confirming</h1>
+            <p className="text-[#CBD5E1] m-0">
+              Your payment went through, but your account hasn't unlocked yet. Refresh this page in a minute. If it still doesn't unlock, reply to your receipt email and we'll sort it out.
+            </p>
+            <button onClick={() => location.reload()} className="h-12 px-5 rounded-xl bg-[#2563EB] font-bold mt-2">
+              Refresh
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -29,24 +29,24 @@ That's it: you get a link like `exam-rescue.vercel.app` running in demo mode.
    - `VITE_SUPABASE_ANON_KEY` = the anon key
 6. In Vercel → **Deployments**, click **⋯ → Redeploy**.
 
-## 3. Take payments (Lemon Squeezy)
+## 3. Take payments (Stripe Managed Payments)
 
-Lemon Squeezy is a "merchant of record": it charges the customer and handles EU VAT for you.
+Stripe Managed Payments acts as the "merchant of record": Stripe sells to the customer and handles EU VAT for you.
 
-1. Create a product "Exam Rescue season pass" at your price. Copy its **checkout link** (Share → checkout URL).
-2. Add these in Vercel:
-   - `VITE_CHECKOUT_URL` = the checkout link
+1. In Stripe, create a **Payment Link** for "Exam Rescue season pass" (one-time price, e.g. €14.99) with **Managed Payments** turned on.
+   - After payment → **Don't show confirmation page** → redirect to `https://YOUR-APP.vercel.app/#/paid`
+2. In Stripe → **Developers → Webhooks → Add endpoint**:
+   - URL: `https://YOUR-APP.vercel.app/api/stripe-webhook`
+   - Events: `checkout.session.completed` and `checkout.session.async_payment_succeeded`
+   - Copy the **Signing secret** (`whsec_…`).
+3. Add these in Vercel → Settings → Environment Variables, then redeploy:
+   - `VITE_CHECKOUT_URL` = the Payment Link (`https://buy.stripe.com/…`)
    - `VITE_PRICE_LABEL` = e.g. `€14.99`
+   - `STRIPE_WEBHOOK_SECRET` = the signing secret
    - `SUPABASE_URL` = same as `VITE_SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY` = Supabase → Project Settings → API → **service_role** key (never share this one)
-   - `LEMONSQUEEZY_WEBHOOK_SECRET` = any long random password you make up
-3. In Lemon Squeezy, open **Settings → Webhooks → +**:
-   - URL: `https://YOUR-APP.vercel.app/api/lemonsqueezy-webhook`
-   - Signing secret: the same password as `LEMONSQUEEZY_WEBHOOK_SECRET`
-   - Event: `order_created`
-4. Redeploy in Vercel.
+   - `SUPABASE_SERVICE_ROLE_KEY` = Supabase → Project Settings → API keys → **service_role / secret** key (never share this one)
 
-When a student pays, Lemon Squeezy tells the app, and their account is unlocked for 365 days automatically.
+When a student pays, Stripe tells the app and their account unlocks for 365 days. The app adds the student's account id to the Payment Link automatically, so Stripe knows who paid.
 
 ### Access codes (Etsy, schools, giveaways)
 
@@ -76,7 +76,7 @@ npm test         # runs the planner and payment tests
 | `src/lib/backend.ts` | Login, saving, trial and unlock rules. |
 | `src/screens/` | One file per screen (Today, Plan, Topics, Progress, Settings, Unlock, setup). |
 | `supabase/schema.sql` | Database tables and security rules. |
-| `api/lemonsqueezy-webhook.ts` | Unlocks accounts after payment. |
+| `api/stripe-webhook.ts` | Unlocks accounts after a Stripe payment. |
 | `tests/` | Automated tests (engine vs spreadsheet, 300 random schedules, webhook security). |
 
 ## Rules worth knowing
