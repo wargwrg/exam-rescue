@@ -49,28 +49,17 @@ export const Icon = {
 };
 
 // ---------------------------------------------------------------- brand
-export function Logo({ dark = true, size = 20 }: { dark?: boolean; size?: number }) {
-  const s = size * 2;
+export function Logo({ dark = true, size = 20, subtitle = true }: { dark?: boolean; size?: number; subtitle?: boolean }) {
+  // Wordmark images live in /public/brand. White version on dark backgrounds, blue version on light ones.
+  const src = dark ? "/brand/clutchup-white.png" : "/brand/clutchup-blue.png";
   return (
-    <div className="flex items-center gap-2.5">
-      <div
-        aria-hidden="true"
-        className="flex items-center justify-center bg-[#2563EB] text-white font-extrabold italic"
-        style={{ width: s, height: s, borderRadius: size * 0.6, fontSize: size * 0.95, gap: 1 }}
-      >
-        C
-        <svg width={size * 0.7} height={size * 0.7} viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 15l7-7 7 7" />
-        </svg>
-      </div>
-      <div className="flex flex-col leading-tight">
-        <span className={`font-extrabold italic tracking-tight ${dark ? "text-white" : "text-[#14213D]"}`} style={{ fontSize: size }}>
-          CLUTCH <span className="text-[#F59E0B]">UP</span>
-        </span>
-        <span className={`font-semibold ${dark ? "text-[#93C5FD]" : "text-[#1D4ED8]"}`} style={{ fontSize: size * 0.6 }}>
+    <div className="flex flex-col items-start gap-1.5">
+      <img src={src} alt="Clutch Up!" style={{ height: size * 1.4, width: "auto" }} draggable={false} />
+      {subtitle && (
+        <span className={`font-semibold tracking-wide ${dark ? "text-[#93C5FD]" : "text-[#0038D1]"}`} style={{ fontSize: size * 0.62 }}>
           Exam Rescue
         </span>
-      </div>
+      )}
     </div>
   );
 }
